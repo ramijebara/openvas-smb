@@ -1,0 +1,22 @@
+{{ $alpineVersion := "3.20" }}
+version: v1.1.0
+stepTimeout: 3600
+env:
+  - DOCKER_BUILDKIT=1
+steps:
+  - id: build-amd64
+    build: --tag {{ .Run.Registry }}/openvas-smb:alpine{{ $alpineVersion }}-acr-amd64 -f .docker/prod-alpine.Dockerfile --platform=linux/amd64 --build-arg VERSION={{ $alpineVersion }} .
+    when: ["-"]
+  - id: build-arm64
+    build: --tag {{ .Run.Registry }}/openvas-smb:alpine{{ $alpineVersion }}-acr-arm64 -f .docker/prod-alpine.Dockerfile --platform=linux/arm64 --build-arg VERSION={{ $alpineVersion }} .
+    when: ["-"]
+  - push:
+    - {{ .Run.Registry }}/openvas-smb:alpine{{ $alpineVersion }}-acr-amd64
+    - {{ .Run.Registry }}/openvas-smb:alpine{{ $alpineVersion }}-acr-arm64
+    when: ["build-amd64", "build-arm64"]
+  - cmd: >
+      docker manifest create
+      {{ .Run.Registry }}/openvas-smb:alpine{{ $alpineVersion }}-acr
+      {{ .Run.Registry }}/openvas-smb:alpine{{ $alpineVersion }}-acr-amd64
+      {{ .Run.Registry }}/openvas-smb:alpine{{ $alpineVersion }}-acr-arm64
+  - cmd: docker manifest push --purge {{ .Run.Registry }}/openvas-smb:alpine{{ $alpineVersion }}-acr
