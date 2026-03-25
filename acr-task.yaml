@@ -1,4 +1,4 @@
-{{ $alpineVersion := "3.22" }}
+{{ $alpineVersion := "3.23" }}
 version: v1.1.0
 stepTimeout: 3600
 env:
